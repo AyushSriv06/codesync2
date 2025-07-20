@@ -15,8 +15,8 @@ export const useCollaborationStore = create<CollaborationStore>((set, get) => ({
       const { WebrtcProvider } = await import("y-webrtc");
       const { MonacoBinding } = await import("y-monaco");
       
-      const { editor } = await import("@/store/useCodeEditorStore");
-      const currentEditor = editor.getState().editor;
+      const { useCodeEditorStore } = await import("@/store/useCodeEditorStore");
+      const currentEditor = useCodeEditorStore.getState().editor;
       
       if (!currentEditor) {
         throw new Error("Editor not initialized");
