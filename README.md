@@ -37,7 +37,7 @@
 - ✨ **Code Snippet Saving** — Save reusable code snippets for later!
 - 📤 **Snippet Sharing** — Share code snippets with others using unique URLs
 - 💬 **Snippet Discussions** — Add comments to any snippet and view others' thoughts
-- 🧑‍🤝‍🧑 **Real-time collaboration** *(coming soon)*
+- 🧑‍🤝‍🧑 **Real-time collaboration** — Collaborate on code in real-time with others using Yjs and WebRTC
 - 💻 Code **execution engine** *(coming soon)*
 
 
@@ -83,7 +83,9 @@ npm run dev
 | Clerk Authentication          | ✅ Complete |
 | Convex Integration            | ✅ Complete |
 | LocalStorage Save             | ✅ Complete |
-| Real-time Collaboration       | 🔜 Coming Soon |
+| Code Snippet Saving           | ✅ Complete |
+| Snippet Sharing & Comments    | ✅ Complete |
+| Real-time Collaboration       | ✅ Complete |
 | Code Execution Support        | 🔜 Coming Soon |
 
 ---

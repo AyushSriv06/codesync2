@@ -9,13 +9,14 @@ import ThemeSelector from "./ThemeSelector";
 import LanguageSelector from "./LanguageSelector";
 import RunButton from "./RunButton";
 import HeaderProfileBtn from "./HeaderProfileBtn";
+import JoinRoomDialog from "@/components/collaboration/JoinRoomDialog";
+import CollaborationStatus from "@/components/collaboration/CollaborationStatus";
+import LeaveRoomButton from "@/components/collaboration/LeaveRoomButton";
+import { useState } from "react";
 
-async function Header() {
-  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-  const user = await currentUser();
-  await convex.query(api.users.getUser, {
-    userId: user?.id || "",
-  });
+function Header() {
+  const [isJoinRoomOpen, setIsJoinRoomOpen] = useState(false);
+
 
   return (
     <div className="relative z-10">
@@ -75,11 +76,25 @@ async function Header() {
                 Profile
               </span>
             </Link>
+
+            <button
+              onClick={() => setIsJoinRoomOpen(true)}
+              className="relative group flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-300 bg-gray-800/50 
+                hover:bg-blue-500/10 border border-gray-800 hover:border-blue-500/50 transition-all duration-300 shadow-lg overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Users className="w-4 h-4 relative z-10 group-hover:rotate-3 transition-transform" />
+              <span className="text-sm font-medium relative z-10 group-hover:text-white hidden sm:inline">
+                Join Room
+              </span>
+            </button>
           </nav>
         </div>
 
         {/* RIGHT SECTION */}
         <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+          <CollaborationStatus />
+          <LeaveRoomButton />
           <ThemeSelector />
           <LanguageSelector />
 
@@ -99,6 +114,11 @@ async function Header() {
           </SignedOut>
         </div>
       </div>
+
+      <JoinRoomDialog 
+        isOpen={isJoinRoomOpen} 
+        onClose={() => setIsJoinRoomOpen(false)} 
+      />
     </div>
   );
 }
