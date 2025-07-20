@@ -1,9 +1,6 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
-import React from "react";
-import { api } from "../../../../convex/_generated/api";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Blocks, Code2, UserCircle2 } from "lucide-react";
+import { Blocks, Code2, UserCircle2, Users } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import ThemeSelector from "./ThemeSelector";
 import LanguageSelector from "./LanguageSelector";
@@ -12,7 +9,6 @@ import HeaderProfileBtn from "./HeaderProfileBtn";
 import JoinRoomDialog from "@/components/collaboration/JoinRoomDialog";
 import CollaborationStatus from "@/components/collaboration/CollaborationStatus";
 import LeaveRoomButton from "@/components/collaboration/LeaveRoomButton";
-import { useState } from "react";
 
 function Header() {
   const [isJoinRoomOpen, setIsJoinRoomOpen] = useState(false);

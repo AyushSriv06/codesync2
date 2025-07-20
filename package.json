@@ -20,6 +20,9 @@
     "react-hot-toast": "^2.5.2",
     "react-syntax-highlighter": "^15.6.1",
     "svix": "^1.69.0",
+    "y-monaco": "^0.1.6",
+    "y-webrtc": "^10.3.0",
+    "yjs": "^13.6.27",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
