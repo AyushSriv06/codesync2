@@ -1,12 +1,12 @@
 "use client";
 
-import { useCollaborationStore } from "@/store/useCollaborationStore";
+import { useSocketCollaborationStore } from "@/store/useSocketCollaborationStore";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
-const LeaveRoomButton = () => {
-  const { isConnected, leaveRoom, roomId } = useCollaborationStore();
+const SocketLeaveRoomButton = () => {
+  const { isConnected, leaveRoom, roomId } = useSocketCollaborationStore();
 
   const handleLeaveRoom = () => {
     leaveRoom();
@@ -28,4 +28,4 @@ const LeaveRoomButton = () => {
   );
 };
 
-export default LeaveRoomButton;
+export default SocketLeaveRoomButton;

@@ -1,13 +1,13 @@
 "use client";
 
-import { useCollaborationStore } from "@/store/useCollaborationStore";
-import { Users, Wifi, WifiOff } from "lucide-react";
+import { useSocketCollaborationStore } from "@/store/useSocketCollaborationStore";
+import { Users, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 
-const CollaborationStatus = () => {
-  const { isConnected, roomId, connectedUsers } = useCollaborationStore();
+const SocketCollaborationStatus = () => {
+  const { isConnected, roomId, users } = useSocketCollaborationStore();
 
-  if (!isConnected) return null;
+  if (!isConnected || !roomId) return null;
 
   return (
     <motion.div
@@ -19,10 +19,10 @@ const CollaborationStatus = () => {
       <span className="text-sm font-medium">Room: {roomId}</span>
       <div className="flex items-center gap-1">
         <Users className="w-3 h-3" />
-        <span className="text-xs">{connectedUsers}</span>
+        <span className="text-xs">{users.length}</span>
       </div>
     </motion.div>
   );
 };
 
-export default CollaborationStatus;
+export default SocketCollaborationStatus;

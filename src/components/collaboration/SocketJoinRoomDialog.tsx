@@ -3,21 +3,26 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Users, Wifi, Copy, Check } from "lucide-react";
-import { useCollaborationStore } from "@/store/useCollaborationStore";
+import { useSocketCollaborationStore } from "@/store/useSocketCollaborationStore";
 import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 
-interface JoinRoomDialogProps {
+interface SocketJoinRoomDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const JoinRoomDialog = ({ isOpen, onClose }: JoinRoomDialogProps) => {
+const SocketJoinRoomDialog = ({ isOpen, onClose }: SocketJoinRoomDialogProps) => {
   const { user } = useUser();
-  const { joinRoom, isConnected, roomId: currentRoomId, connectedUsers } = useCollaborationStore();
+  const { 
+    joinRoom, 
+    isConnected, 
+    roomId: currentRoomId, 
+    users,
+    isJoining 
+  } = useSocketCollaborationStore();
   
   const [roomId, setRoomId] = useState("");
-  const [isJoining, setIsJoining] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const generateRoomId = () => {
@@ -36,17 +41,8 @@ const JoinRoomDialog = ({ isOpen, onClose }: JoinRoomDialogProps) => {
       return;
     }
 
-    setIsJoining(true);
-    try {
-      await joinRoom(roomId.trim(), user.firstName || user.emailAddresses[0].emailAddress);
-      toast.success(`Joined room: ${roomId}`);
-      onClose();
-    } catch (error) {
-      console.error("Failed to join room:", error);
-      toast.error("Failed to join room. Please try again.");
-    } finally {
-      setIsJoining(false);
-    }
+    const userName = user.firstName || user.emailAddresses[0].emailAddress;
+    joinRoom(roomId.trim(), userName);
   };
 
   const copyRoomId = async () => {
@@ -123,9 +119,24 @@ const JoinRoomDialog = ({ isOpen, onClose }: JoinRoomDialogProps) => {
                     <div className="font-mono text-lg text-white">{currentRoomId}</div>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">Connected users</span>
-                    <span className="text-white font-medium">{connectedUsers}</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">Connected users</span>
+                      <span className="text-white font-medium">{users.length}</span>
+                    </div>
+                    
+                    {users.length > 0 && (
+                      <div className="bg-[#0a0a0f] rounded-lg p-3 border border-[#313244]">
+                        <div className="space-y-1">
+                          {users.map((user) => (
+                            <div key={user.id} className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              <span className="text-gray-300">{user.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -197,4 +208,4 @@ const JoinRoomDialog = ({ isOpen, onClose }: JoinRoomDialogProps) => {
   );
 };
 
-export default JoinRoomDialog;
+export default SocketJoinRoomDialog;

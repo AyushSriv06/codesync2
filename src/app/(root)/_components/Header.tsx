@@ -6,9 +6,9 @@ import ThemeSelector from "./ThemeSelector";
 import LanguageSelector from "./LanguageSelector";
 import RunButton from "./RunButton";
 import HeaderProfileBtn from "./HeaderProfileBtn";
-import JoinRoomDialog from "@/components/collaboration/JoinRoomDialog";
-import CollaborationStatus from "@/components/collaboration/CollaborationStatus";
-import LeaveRoomButton from "@/components/collaboration/LeaveRoomButton";
+import SocketJoinRoomDialog from "@/components/collaboration/SocketJoinRoomDialog";
+import SocketCollaborationStatus from "@/components/collaboration/SocketCollaborationStatus";
+import SocketLeaveRoomButton from "@/components/collaboration/SocketLeaveRoomButton";
 
 function Header() {
   const [isJoinRoomOpen, setIsJoinRoomOpen] = useState(false);
@@ -89,8 +89,8 @@ function Header() {
 
         {/* RIGHT SECTION */}
         <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-          <CollaborationStatus />
-          <LeaveRoomButton />
+          <SocketCollaborationStatus />
+          <SocketLeaveRoomButton />
           <ThemeSelector />
           <LanguageSelector />
 
@@ -111,7 +111,7 @@ function Header() {
         </div>
       </div>
 
-      <JoinRoomDialog 
+      <SocketJoinRoomDialog 
         isOpen={isJoinRoomOpen} 
         onClose={() => setIsJoinRoomOpen(false)} 
       />

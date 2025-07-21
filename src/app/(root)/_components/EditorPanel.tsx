@@ -11,7 +11,8 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./EditorPanelSkeleton";
 import ShareSnippetDialog from "./ShareSnippetDialog";
-import { useCollaboration } from "@/hooks/useCollaboration";
+import { useSocketCollaborationStore } from "@/store/useSocketCollaborationStore";
+import CopyCodeButton from "@/components/CopyCodeButton";
 
 const EditorPanel = () => {
   const clerk = useClerk();
@@ -19,9 +20,7 @@ const EditorPanel = () => {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
   const mounted = useMounted();
-  
-  // Initialize collaboration hook
-  useCollaboration();
+  const { sendCodeChange, sendLanguageChange } = useSocketCollaborationStore();
 
   // Load saved code or fallback to default
   useEffect(() => {
@@ -45,7 +44,17 @@ const EditorPanel = () => {
 
   // Save code on change
   const handleEditorChange = (value: string | undefined) => {
-    if (value) localStorage.setItem(`editor-code-${language}`, value);
+    if (value) {
+      localStorage.setItem(`editor-code-${language}`, value);
+      // Send code change to other users
+      sendCodeChange(value);
+    }
+  };
+
+  // Handle language change with collaboration
+  const handleLanguageChange = (newLanguage: string) => {
+    useCodeEditorStore.getState().setLanguage(newLanguage);
+    sendLanguageChange(newLanguage);
   };
 
   // Font size handler with limit
@@ -91,6 +100,9 @@ const EditorPanel = () => {
                 </span>
               </div>
             </div>
+
+            {/* Copy Code Button */}
+            <CopyCodeButton />
 
             {/* Reset */}
             <motion.button
