@@ -12,7 +12,6 @@ import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./EditorPanelSkeleton";
 import ShareSnippetDialog from "./ShareSnippetDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
-import { useCollaboration } from "@/hooks/useCollaboration";
 
 const EditorPanel = () => {
   const clerk = useClerk();
@@ -20,9 +19,6 @@ const EditorPanel = () => {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
   const mounted = useMounted();
-  
-  // Initialize collaboration hook
-  useCollaboration();
   
   // Initialize collaboration hook
   useCollaboration();
