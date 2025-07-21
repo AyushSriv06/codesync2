@@ -29,21 +29,16 @@ const CopyCodeButton = () => {
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
       onClick={handleCopyCode}
-      className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
+      className="p-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+      aria-label="Copy code"
     >
       {copied ? (
-        <>
-          <Check className="w-4 h-4 text-green-400" />
-          <span>Copied!</span>
-        </>
+        <Check className="w-4 h-4 text-green-400" />
       ) : (
-        <>
-          <Copy className="w-4 h-4" />
-          <span>Copy Code</span>
-        </>
+        <Copy className="w-4 h-4" />
       )}
     </motion.button>
   );
