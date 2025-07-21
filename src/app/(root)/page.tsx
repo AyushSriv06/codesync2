@@ -20,18 +20,14 @@ const DynamicHeaderWrapper = dynamic(() => import("./_components/HeaderWrapper")
 
 export default function Home() {
   return (
-   <>
-   <div className="min-h-screen">
-    <div className="max-w-[1800px] mx-auto p-4">
-     <DynamicHeaderWrapper/>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <DynamicEditorPanel/>
-        <DynamicOutputPanel/>
+    <div className="min-h-screen">
+      <div className="max-w-[1800px] mx-auto p-4">
+        <DynamicHeaderWrapper />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <DynamicEditorPanel />
+          <DynamicOutputPanel />
+        </div>
       </div>
-
-
     </div>
-   </div>
-   </>
   );
 }
