@@ -1,9 +1,13 @@
 import dynamic from "next/dynamic";
-import EditorPanel from "./_components/EditorPanel";
-import OutputPanel from "./_components/OutputPanel";
 
 // Dynamically import EditorPanel to avoid SSR issues with Clerk
 const DynamicEditorPanel = dynamic(() => import("./_components/EditorPanel"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] bg-[#12121a]/90 backdrop-blur rounded-xl border border-white/[0.05] animate-pulse" />
+});
+
+// Dynamically import OutputPanel to avoid SSR issues
+const DynamicOutputPanel = dynamic(() => import("./_components/OutputPanel"), {
   ssr: false,
   loading: () => <div className="h-[600px] bg-[#12121a]/90 backdrop-blur rounded-xl border border-white/[0.05] animate-pulse" />
 });
@@ -22,7 +26,7 @@ export default function Home() {
      <DynamicHeaderWrapper/>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DynamicEditorPanel/>
-        <OutputPanel/>
+        <DynamicOutputPanel/>
       </div>
 
 
