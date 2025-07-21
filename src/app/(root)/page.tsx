@@ -1,20 +1,25 @@
+'use client';
+
 import dynamic from "next/dynamic";
 
-const DynamicEditorPanel = dynamic(() => import("../_components/EditorPanel"), {
+// Lazy load EditorPanel to avoid SSR issues (e.g., with Clerk or CodeMirror)
+const DynamicEditorPanel = dynamic(() => import('./_components/EditorPanel'), {
   ssr: false,
   loading: () => (
     <div className="h-[600px] bg-[#12121a]/90 backdrop-blur rounded-xl border border-white/[0.05] animate-pulse" />
   ),
 });
 
-const DynamicOutputPanel = dynamic(() => import("../_components/OutputPanel"), {
+// Lazy load OutputPanel similarly
+const DynamicOutputPanel = dynamic(() => import('./_components/OutputPanel'), {
   ssr: false,
   loading: () => (
     <div className="h-[600px] bg-[#12121a]/90 backdrop-blur rounded-xl border border-white/[0.05] animate-pulse" />
   ),
 });
 
-const DynamicHeaderWrapper = dynamic(() => import("../_components/HeaderWrapper"), {
+// Lazy load HeaderWrapper to fix SSR issues with Framer Motion or Auth libs
+const DynamicHeaderWrapper = dynamic(() => import('./_components/HeaderWrapper'), {
   ssr: false,
   loading: () => <div className="h-16 bg-transparent animate-pulse" />,
 });
