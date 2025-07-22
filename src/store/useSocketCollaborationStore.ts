@@ -60,6 +60,9 @@ interface SocketCollaborationState {
   sendLanguageChange: (language: string) => void;
   sendMessage: (message: string, userName: string) => void;
   sendCursorPosition: (position: CursorPosition, userName: string) => void;
+  
+  // Add socket reference for direct access
+  getSocket: () => Socket | null;
 }
 
 export const useSocketCollaborationStore = create<SocketCollaborationState>((set, get) => ({
@@ -92,10 +95,13 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
     userCursors: state.userCursors.filter(c => c.userId !== userId)
   })),
 
+  getSocket: () => get().socket,
+
   joinRoom: (roomId, userName) => {
     const { socket } = get();
     if (socket) {
       set({ isJoining: true });
+      console.log('Joining room:', roomId, 'as:', userName);
       socket.emit('join-room', { roomId, userName });
     }
   },
@@ -103,6 +109,7 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
   leaveRoom: () => {
     const { socket, roomId } = get();
     if (socket && roomId) {
+      console.log('Leaving room:', roomId);
       socket.emit('leave-room', { roomId });
       set({ 
         roomId: null, 
@@ -117,6 +124,7 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
   sendCodeChange: (code) => {
     const { socket, roomId } = get();
     if (socket && roomId) {
+      console.log('Sending code change to room:', roomId);
       socket.emit('code-change', { 
         roomId, 
         code, 
@@ -128,6 +136,7 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
   sendLanguageChange: (language) => {
     const { socket, roomId } = get();
     if (socket && roomId) {
+      console.log('Sending language change to room:', roomId, 'language:', language);
       socket.emit('language-change', { 
         roomId, 
         language, 
@@ -139,6 +148,7 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
   sendMessage: (message, userName) => {
     const { socket, roomId } = get();
     if (socket && roomId) {
+      console.log('Sending message to room:', roomId);
       socket.emit('send-message', { 
         roomId, 
         message, 

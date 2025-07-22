@@ -88,16 +88,18 @@ io.on('connection', (socket) => {
 
   // Handle code changes
   socket.on('code-change', ({ roomId, code, userId }) => {
-    console.log(`Code change in room ${roomId} by user ${userId || socket.id}`);
+    console.log(`Code change in room ${roomId} by user ${userId || socket.id}, code length: ${code?.length}`);
     
     try {
       const room = getRoom(roomId);
       room.code = code;
 
       // Broadcast to all other users in the room
+      console.log(`Broadcasting code update to room ${roomId}, excluding ${socket.id}`);
       socket.to(roomId).emit('code-update', { code, userId: socket.id });
     } catch (error) {
       console.error('Error handling code change:', error);
+      socket.emit('error', 'Failed to update code');
     }
   });
 
@@ -110,9 +112,11 @@ io.on('connection', (socket) => {
       room.language = language;
 
       // Broadcast to all users in the room (including sender)
+      console.log(`Broadcasting language update to room ${roomId}`);
       io.to(roomId).emit('language-update', { language, userId: socket.id });
     } catch (error) {
       console.error('Error handling language change:', error);
+      socket.emit('error', 'Failed to update language');
     }
   });
 
@@ -138,15 +142,17 @@ io.on('connection', (socket) => {
       }
 
       // Broadcast to all users in the room
+      console.log(`Broadcasting message to room ${roomId}`);
       io.to(roomId).emit('receive-message', messageData);
     } catch (error) {
       console.error('Error handling message:', error);
+      socket.emit('error', 'Failed to send message');
     }
   });
 
   // Handle cursor position updates
   socket.on('cursor-change', ({ roomId, position, userId, userName }) => {
-    console.log(`Cursor update in room ${roomId} from ${userName || socket.userName}`);
+    // console.log(`Cursor update in room ${roomId} from ${userName || socket.userName}`); // Commented to reduce log spam
     
     try {
       const room = getRoom(roomId);

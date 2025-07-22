@@ -41,6 +41,7 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
     if (!socket) return;
 
     setSocket(socket);
+    console.log('Socket connected with ID:', socket.id);
 
     // Socket event listeners
     socket.on('connect', () => {
@@ -96,14 +97,8 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
 
     // Code synchronization
     socket.on('code-update', ({ code, userId }) => {
-      console.log('Code update from:', userId);
-      if (editor && userId !== socket.id) {
-        const currentPosition = editor.getPosition();
-        editor.setValue(code);
-        if (currentPosition) {
-          editor.setPosition(currentPosition);
-        }
-      }
+      console.log('Code update received from:', userId, 'code length:', code?.length);
+      // Note: Code update handling is now done in CollaborativeEditor component
     });
 
     // Language synchronization
@@ -123,7 +118,7 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
 
     // Cursor updates
     socket.on('cursor-update', ({ position, userId, userName }) => {
-      console.log('Cursor update from:', userName, position);
+      // console.log('Cursor update from:', userName, position); // Commented to reduce log spam
       if (userId !== socket.id) {
         updateUserCursor({
           userId,
@@ -141,9 +136,16 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
       toast.error('Connection error occurred');
     });
 
+    // Connection error handling
+    socket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
+      toast.error('Failed to connect to collaboration server');
+    });
+
     return () => {
       socket.off('connect');
       socket.off('disconnect');
+      socket.off('connect_error');
       socket.off('room-state');
       socket.off('user-joined');
       socket.off('user-left');

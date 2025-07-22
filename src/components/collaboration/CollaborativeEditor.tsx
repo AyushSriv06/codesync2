@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Editor } from "@monaco-editor/react";
 import { defineMonacoThemes, LANGUAGE_CONFIG } from "@/app/(root)/_constants";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
@@ -23,32 +23,48 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
     users, 
     sendCodeChange, 
     sendCursorPosition,
-    userCursors 
+    userCursors,
+    socket
   } = useSocketCollaborationStore();
   
   const editorRef = useRef<any>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [lastChangeFromSocket, setLastChangeFromSocket] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const ignoreNextChange = useRef(false);
+
+  // Debounced code change handler
+  const debouncedSendCode = useCallback(
+    debounce((code: string) => {
+      if (isConnected && !ignoreNextChange.current) {
+        console.log('Sending code change:', code.substring(0, 50) + '...');
+        sendCodeChange(code);
+      }
+    }, 300),
+    [isConnected, sendCodeChange]
+  );
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     setEditor(editor);
 
-    // Handle code changes
+    // Handle code changes with debouncing
     editor.onDidChangeModelContent((e: any) => {
-      // Don't send changes if they came from socket
-      if (lastChangeFromSocket) {
-        setLastChangeFromSocket(false);
+      // Skip if this change came from socket
+      if (ignoreNextChange.current) {
+        ignoreNextChange.current = false;
         return;
       }
 
+      const code = editor.getValue();
+      console.log('Editor content changed, sending to socket...');
+      
+      // Send code change with debouncing
+      debouncedSendCode(code);
+      
+      // Show typing indicator
       if (!isTyping) {
         setIsTyping(true);
-        const code = editor.getValue();
-        sendCodeChange(code);
-        
-        // Clear typing indicator after 1 second
         if (typingTimeoutRef.current) {
           clearTimeout(typingTimeoutRef.current);
         }
@@ -87,20 +103,41 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
 
   // Listen for code updates from socket
   useEffect(() => {
-    const handleCodeUpdate = (code: string) => {
-      if (editorRef.current) {
-        const currentPosition = editorRef.current.getPosition();
-        setLastChangeFromSocket(true);
-        editorRef.current.setValue(code);
+    if (!socket || !editorRef.current) return;
+
+    const handleCodeUpdate = (data: { code: string; userId: string }) => {
+      console.log('Received code update from:', data.userId);
+      
+      if (data.userId !== socket.id && editorRef.current) {
+        const editor = editorRef.current;
+        const currentPosition = editor.getPosition();
+        const currentSelection = editor.getSelection();
+        
+        // Set flag to ignore the next change event
+        ignoreNextChange.current = true;
+        
+        // Update editor content
+        editor.setValue(data.code);
+        
+        // Restore cursor position and selection
         if (currentPosition) {
-          editorRef.current.setPosition(currentPosition);
+          editor.setPosition(currentPosition);
         }
+        if (currentSelection) {
+          editor.setSelection(currentSelection);
+        }
+        
+        console.log('Editor updated with new code');
       }
     };
 
-    // This would be called from the socket store when code updates are received
-    // The actual implementation is in SocketCollaborationProvider
-  }, []);
+    // Listen for code updates
+    socket.on('code-update', handleCodeUpdate);
+
+    return () => {
+      socket.off('code-update', handleCodeUpdate);
+    };
+  }, [socket]);
 
   return (
     <div className="relative">
@@ -193,5 +230,17 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
     </div>
   );
 };
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
 
 export default CollaborativeEditor;
