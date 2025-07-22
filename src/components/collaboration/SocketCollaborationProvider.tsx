@@ -44,10 +44,12 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
 
     // Socket event listeners
     socket.on('connect', () => {
+      console.log('Connected to server');
       setConnected(true);
     });
 
     socket.on('disconnect', () => {
+      console.log('Disconnected from server');
       setConnected(false);
     });
 
@@ -57,15 +59,21 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
       
       // Update editor with room code
       if (editor && code) {
+        const currentPosition = editor.getPosition();
         editor.setValue(code);
+        if (currentPosition) {
+          editor.setPosition(currentPosition);
+        }
       }
       
       // Update language
-      setLanguage(language);
+      if (language) {
+        setLanguage(language);
+      }
       
       // Update messages and users
-      setMessages(messages);
-      setUsers(users);
+      setMessages(messages || []);
+      setUsers(users || []);
       setJoining(false);
       
       toast.success('Joined room successfully!');
@@ -73,14 +81,16 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
 
     socket.on('user-joined', ({ user, users }) => {
       console.log('User joined:', user);
-      setUsers(users);
+      setUsers(users || []);
       toast.success(`${user.name} joined the room`);
     });
 
-    socket.on('user-left', ({ userName, users }) => {
+    socket.on('user-left', ({ userName, users, userId }) => {
       console.log('User left:', userName);
-      setUsers(users);
-      removeUserCursor(userId);
+      setUsers(users || []);
+      if (userId) {
+        removeUserCursor(userId);
+      }
       toast.info(`${userName} left the room`);
     });
 
@@ -113,6 +123,7 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
 
     // Cursor updates
     socket.on('cursor-update', ({ position, userId, userName }) => {
+      console.log('Cursor update from:', userName, position);
       if (userId !== socket.id) {
         updateUserCursor({
           userId,
@@ -122,6 +133,12 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
           timestamp: Date.now()
         });
       }
+    });
+
+    // Error handling
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
+      toast.error('Connection error occurred');
     });
 
     return () => {
@@ -134,6 +151,7 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
       socket.off('language-update');
       socket.off('receive-message');
       socket.off('cursor-update');
+      socket.off('error');
     };
   }, [socket, editor, setSocket, setConnected, setRoomId, setUsers, addMessage, setMessages, setLanguage, setJoining, updateUserCursor, removeUserCursor]);
 

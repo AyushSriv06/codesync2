@@ -28,6 +28,7 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
   
   const editorRef = useRef<any>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [lastChangeFromSocket, setLastChangeFromSocket] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
@@ -35,7 +36,13 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
     setEditor(editor);
 
     // Handle code changes
-    editor.onDidChangeModelContent(() => {
+    editor.onDidChangeModelContent((e: any) => {
+      // Don't send changes if they came from socket
+      if (lastChangeFromSocket) {
+        setLastChangeFromSocket(false);
+        return;
+      }
+
       if (!isTyping) {
         setIsTyping(true);
         const code = editor.getValue();
@@ -69,30 +76,43 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
           startLineNumber: e.selection.startLineNumber,
           startColumn: e.selection.startColumn,
           endLineNumber: e.selection.endLineNumber,
-          endColumn: e.selection.endColumn
+          endColumn: e.selection.endColumn,
+          lineNumber: e.selection.positionLineNumber,
+          column: e.selection.positionColumn
         };
         sendCursorPosition(selection, user.firstName || user.emailAddresses[0].emailAddress);
       }
     });
   };
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (value && isConnected) {
-      sendCodeChange(value);
-    }
-  };
+  // Listen for code updates from socket
+  useEffect(() => {
+    const handleCodeUpdate = (code: string) => {
+      if (editorRef.current) {
+        const currentPosition = editorRef.current.getPosition();
+        setLastChangeFromSocket(true);
+        editorRef.current.setValue(code);
+        if (currentPosition) {
+          editorRef.current.setPosition(currentPosition);
+        }
+      }
+    };
+
+    // This would be called from the socket store when code updates are received
+    // The actual implementation is in SocketCollaborationProvider
+  }, []);
 
   return (
     <div className="relative">
       {/* Connection Status */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+      <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium backdrop-blur-sm ${
             isConnected
-              ? "bg-green-500/10 text-green-400 border border-green-500/20"
-              : "bg-red-500/10 text-red-400 border border-red-500/20"
+              ? "bg-green-500/20 text-green-400 border border-green-500/30"
+              : "bg-red-500/20 text-red-400 border border-red-500/30"
           }`}
         >
           {isConnected ? (
@@ -118,7 +138,7 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-sm backdrop-blur-sm"
           >
             <div className="flex gap-1">
               <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -141,7 +161,6 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
           theme={theme}
           beforeMount={defineMonacoThemes}
           onMount={handleEditorDidMount}
-          onChange={handleEditorChange}
           options={{
             minimap: { enabled: true },
             fontSize,
@@ -162,7 +181,6 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
               verticalScrollbarSize: 8,
               horizontalScrollbarSize: 8,
             },
-            // Enable collaborative features
             wordWrap: "on",
             wordWrapColumn: 120,
             rulers: [80, 120],
@@ -170,7 +188,7 @@ const CollaborativeEditor = ({ height = "600px" }: CollaborativeEditorProps) => 
         />
 
         {/* User Cursors Overlay */}
-        <UserCursor cursors={userCursors} />
+        <UserCursor cursors={userCursors} editorRef={editorRef} />
       </div>
     </div>
   );
