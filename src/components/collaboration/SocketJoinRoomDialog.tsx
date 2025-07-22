@@ -6,7 +6,7 @@ import { X, Users, Wifi, Copy, Check } from "lucide-react";
 import { useSocketCollaborationStore } from "@/store/useSocketCollaborationStore";
 import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
-
+import { useRouter } from "next/navigation";
 interface SocketJoinRoomDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +14,7 @@ interface SocketJoinRoomDialogProps {
 
 const SocketJoinRoomDialog = ({ isOpen, onClose }: SocketJoinRoomDialogProps) => {
   const { user } = useUser();
+  const router = useRouter(); 
   const { 
     joinRoom, 
     isConnected, 
@@ -42,7 +43,13 @@ const SocketJoinRoomDialog = ({ isOpen, onClose }: SocketJoinRoomDialogProps) =>
     }
 
     const userName = user.firstName || user.emailAddresses[0].emailAddress;
-    joinRoom(roomId.trim(), userName);
+    try {
+      await joinRoom(roomId.trim(), userName); 
+      router.push(`/room/${roomId.trim()}`); 
+      onClose(); 
+    } catch (err) {
+      toast.error("Failed to join room");
+    }
   };
 
   const copyRoomId = async () => {
