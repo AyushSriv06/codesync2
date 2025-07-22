@@ -37,7 +37,6 @@ export default function RootLayout({
         <ConvexClientProvider>
           <SocketCollaborationProvider>
             {children}
-            <ChatBox />
           </SocketCollaborationProvider>
         </ConvexClientProvider>
         <Footer/>

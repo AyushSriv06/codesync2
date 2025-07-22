@@ -11,23 +11,15 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import useMounted from "@/hooks/useMounted";
 import { EditorPanelSkeleton } from "./EditorPanelSkeleton";
 import ShareSnippetDialog from "./ShareSnippetDialog";
-import { useSocketCollaborationStore } from "@/store/useSocketCollaborationStore";
 import CopyCodeButton from "@/components/CopyCodeButton";
+import CollaborativeEditor from "@/components/collaboration/CollaborativeEditor";
 
 const EditorPanel = () => {
   const clerk = useClerk();
   const { user, isLoaded: userLoaded } = useUser();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
+  const { language, theme, fontSize, setFontSize } = useCodeEditorStore();
   const mounted = useMounted();
-  const { sendCodeChange, sendLanguageChange } = useSocketCollaborationStore();
-
-  // Load saved code or fallback to default
-  useEffect(() => {
-    const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(newCode);
-  }, [language, editor]);
 
   // Load saved font size
   useEffect(() => {
@@ -38,23 +30,11 @@ const EditorPanel = () => {
   // Reset to default code
   const handleRefresh = () => {
     const defaultCode = LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(defaultCode);
-    localStorage.removeItem(`editor-code-${language}`);
-  };
-
-  // Save code on change
-  const handleEditorChange = (value: string | undefined) => {
-    if (value) {
-      localStorage.setItem(`editor-code-${language}`, value);
-      // Send code change to other users
-      sendCodeChange(value);
+    const { editor } = useCodeEditorStore.getState();
+    if (editor) {
+      editor.setValue(defaultCode);
     }
-  };
-
-  // Handle language change with collaboration
-  const handleLanguageChange = (newLanguage: string) => {
-    useCodeEditorStore.getState().setLanguage(newLanguage);
-    sendLanguageChange(newLanguage);
+    localStorage.removeItem(`editor-code-${language}`);
   };
 
   // Font size handler with limit
@@ -128,42 +108,12 @@ const EditorPanel = () => {
           </div>
         </div>
 
-        {/* Code Editor */}
-        <div className="relative group rounded-xl overflow-hidden ring-1 ring-white/[0.05]">
-          {clerk.loaded ? (
-            <Editor
-              height="600px"
-              language={LANGUAGE_CONFIG[language].monacoLanguage}
-              onChange={handleEditorChange}
-              theme={theme}
-              beforeMount={defineMonacoThemes}
-              onMount={(editor) => setEditor(editor)}
-              options={{
-                minimap: { enabled: true },
-                fontSize,
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                padding: { top: 16, bottom: 16 },
-                renderWhitespace: "selection",
-                fontFamily: '"Fira Code", "Cascadia Code", Consolas, monospace',
-                fontLigatures: true,
-                cursorBlinking: "smooth",
-                smoothScrolling: true,
-                contextmenu: true,
-                renderLineHighlight: "all",
-                lineHeight: 1.6,
-                letterSpacing: 0.5,
-                roundedSelection: true,
-                scrollbar: {
-                  verticalScrollbarSize: 8,
-                  horizontalScrollbarSize: 8,
-                },
-              }}
-            />
-          ) : (
-            <EditorPanelSkeleton />
-          )}
-        </div>
+        {/* Collaborative Editor */}
+        {clerk.loaded ? (
+          <CollaborativeEditor />
+        ) : (
+          <EditorPanelSkeleton />
+        )}
       </div>
 
       {/* Share Dialog */}

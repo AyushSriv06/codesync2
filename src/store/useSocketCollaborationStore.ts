@@ -5,6 +5,7 @@ interface User {
   id: string;
   name: string;
   joinedAt?: number;
+  color?: string;
 }
 
 interface ChatMessage {
@@ -15,6 +16,23 @@ interface ChatMessage {
   timestamp: number;
 }
 
+interface CursorPosition {
+  lineNumber: number;
+  column: number;
+  startLineNumber?: number;
+  startColumn?: number;
+  endLineNumber?: number;
+  endColumn?: number;
+}
+
+interface UserCursor {
+  userId: string;
+  userName: string;
+  position: CursorPosition;
+  color: string;
+  timestamp: number;
+}
+
 interface SocketCollaborationState {
   socket: Socket | null;
   isConnected: boolean;
@@ -22,6 +40,7 @@ interface SocketCollaborationState {
   users: User[];
   messages: ChatMessage[];
   isJoining: boolean;
+  userCursors: UserCursor[];
   
   // Actions
   setSocket: (socket: Socket) => void;
@@ -31,6 +50,8 @@ interface SocketCollaborationState {
   addMessage: (message: ChatMessage) => void;
   setMessages: (messages: ChatMessage[]) => void;
   setJoining: (joining: boolean) => void;
+  updateUserCursor: (cursor: UserCursor) => void;
+  removeUserCursor: (userId: string) => void;
   
   // Socket actions
   joinRoom: (roomId: string, userName: string) => void;
@@ -38,6 +59,7 @@ interface SocketCollaborationState {
   sendCodeChange: (code: string) => void;
   sendLanguageChange: (language: string) => void;
   sendMessage: (message: string, userName: string) => void;
+  sendCursorPosition: (position: CursorPosition, userName: string) => void;
 }
 
 export const useSocketCollaborationStore = create<SocketCollaborationState>((set, get) => ({
@@ -47,6 +69,7 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
   users: [],
   messages: [],
   isJoining: false,
+  userCursors: [],
 
   setSocket: (socket) => set({ socket }),
   setConnected: (connected) => set({ isConnected: connected }),
@@ -57,6 +80,17 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
   })),
   setMessages: (messages) => set({ messages }),
   setJoining: (joining) => set({ isJoining: joining }),
+  
+  updateUserCursor: (cursor) => set((state) => ({
+    userCursors: [
+      ...state.userCursors.filter(c => c.userId !== cursor.userId),
+      cursor
+    ]
+  })),
+  
+  removeUserCursor: (userId) => set((state) => ({
+    userCursors: state.userCursors.filter(c => c.userId !== userId)
+  })),
 
   joinRoom: (roomId, userName) => {
     const { socket } = get();
@@ -74,7 +108,8 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
         roomId: null, 
         users: [], 
         messages: [], 
-        isConnected: false 
+        isConnected: false,
+        userCursors: []
       });
     }
   },
@@ -108,6 +143,18 @@ export const useSocketCollaborationStore = create<SocketCollaborationState>((set
         roomId, 
         message, 
         userName 
+      });
+    }
+  },
+
+  sendCursorPosition: (position, userName) => {
+    const { socket, roomId } = get();
+    if (socket && roomId) {
+      socket.emit('cursor-change', {
+        roomId,
+        position,
+        userId: socket.id,
+        userName
       });
     }
   },

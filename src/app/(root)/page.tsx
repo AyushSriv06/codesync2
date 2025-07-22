@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from "next/dynamic";
+import EnhancedChatBox from "@/components/collaboration/EnhancedChatBox";
 
 // Lazy load EditorPanel to avoid SSR issues (e.g., with Clerk or CodeMirror)
 const DynamicEditorPanel = dynamic(() => import('./_components/EditorPanel'), {
@@ -34,6 +35,7 @@ export default function Home() {
           <DynamicOutputPanel />
         </div>
       </div>
+      <EnhancedChatBox />
     </div>
   );
 }

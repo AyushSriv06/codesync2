@@ -28,10 +28,21 @@ function getRoom(roomId) {
       users: new Map(),
       code: '',
       language: 'javascript',
-      messages: []
+      messages: [],
+      cursors: new Map()
     });
   }
   return rooms.get(roomId);
+}
+
+// Generate user color based on user ID
+function getUserColor(userId) {
+  const colors = [
+    "#3B82F6", "#EF4444", "#10B981", "#F59E0B", 
+    "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16"
+  ];
+  const index = userId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[index % colors.length];
 }
 
 io.on('connection', (socket) => {
@@ -49,7 +60,8 @@ io.on('connection', (socket) => {
     room.users.set(socket.id, {
       id: socket.id,
       name: userName,
-      joinedAt: Date.now()
+      joinedAt: Date.now(),
+      color: getUserColor(socket.id)
     });
 
     // Send current room state to the new user
@@ -115,9 +127,23 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('receive-message', messageData);
   });
 
-  // Handle cursor position updates (optional)
+  // Handle cursor position updates
   socket.on('cursor-change', ({ roomId, position, userId }) => {
-    socket.to(roomId).emit('cursor-update', { position, userId, userName: socket.userName });
+    console.log(`Cursor update in room ${roomId} from ${userId}`);
+    
+    const room = getRoom(roomId);
+    room.cursors.set(userId, {
+      position,
+      userName: socket.userName,
+      timestamp: Date.now()
+    });
+    
+    // Broadcast cursor position to other users
+    socket.to(roomId).emit('cursor-update', { 
+      position, 
+      userId, 
+      userName: socket.userName 
+    });
   });
 
   // Handle disconnection
@@ -127,6 +153,7 @@ io.on('connection', (socket) => {
     if (socket.roomId) {
       const room = getRoom(socket.roomId);
       room.users.delete(socket.id);
+      room.cursors.delete(socket.id);
 
       // Notify other users in the room
       socket.to(socket.roomId).emit('user-left', {
@@ -150,6 +177,7 @@ io.on('connection', (socket) => {
     if (socket.roomId === roomId) {
       const room = getRoom(roomId);
       room.users.delete(socket.id);
+      room.cursors.delete(socket.id);
 
       socket.to(roomId).emit('user-left', {
         userId: socket.id,

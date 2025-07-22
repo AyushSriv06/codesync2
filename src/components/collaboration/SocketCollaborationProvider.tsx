@@ -20,10 +20,22 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
     addMessage, 
     setMessages,
     setJoining,
-    roomId 
+    roomId,
+    updateUserCursor,
+    removeUserCursor
   } = useSocketCollaborationStore();
   
   const { setLanguage, editor } = useCodeEditorStore();
+
+  // Generate user color based on user ID
+  const getUserColor = (userId: string) => {
+    const colors = [
+      "#3B82F6", "#EF4444", "#10B981", "#F59E0B", 
+      "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16"
+    ];
+    const index = userId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[index % colors.length];
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -68,6 +80,7 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
     socket.on('user-left', ({ userName, users }) => {
       console.log('User left:', userName);
       setUsers(users);
+      removeUserCursor(userId);
       toast.info(`${userName} left the room`);
     });
 
@@ -98,6 +111,19 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
       addMessage(message);
     });
 
+    // Cursor updates
+    socket.on('cursor-update', ({ position, userId, userName }) => {
+      if (userId !== socket.id) {
+        updateUserCursor({
+          userId,
+          userName,
+          position,
+          color: getUserColor(userId),
+          timestamp: Date.now()
+        });
+      }
+    });
+
     return () => {
       socket.off('connect');
       socket.off('disconnect');
@@ -107,8 +133,9 @@ export const SocketCollaborationProvider = ({ children }: SocketCollaborationPro
       socket.off('code-update');
       socket.off('language-update');
       socket.off('receive-message');
+      socket.off('cursor-update');
     };
-  }, [socket, editor, setSocket, setConnected, setRoomId, setUsers, addMessage, setMessages, setLanguage, setJoining]);
+  }, [socket, editor, setSocket, setConnected, setRoomId, setUsers, addMessage, setMessages, setLanguage, setJoining, updateUserCursor, removeUserCursor]);
 
   return <>{children}</>;
 };
